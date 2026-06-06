@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- IMPLEMENTATION TRACKING: [METADATA] - [DOCUMENT_HEAD_INITIALIZATION] -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T Browser Enterprise Edition</title>
+    
+    <!-- IMPLEMENTATION TRACKING: [ENVIRONMENT] - [TAILWIND_CDN_EMBED] -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- IMPLEMENTATION TRACKING: [ENVIRONMENT] - [TAILWIND_CONFIGURATION_PALETTE] -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        corporate: {
+                            background: '#18181b',
+                            panel: '#252526',
+                            border: '#3c3c3c',
+                            input: '#313131',
+                            inputFocus: '#3c3c3c',
+                            primary: '#007fd4',
+                            primaryHover: '#006eb3',
+                            primaryActive: '#0056b3',
+                            textCore: '#cccccc',
+                            textMuted: '#858585',
+                            iconHover: '#333333',
+                            iconActive: '#1e1e1e',
+                            overlay: 'rgba(0, 0, 0, 0.6)'
+                        }
+                    },
+                    boxShadow: {
+                        'input-glow': '0 0 0 1px rgba(0, 127, 212, 0.6)',
+                        'btn-elevation': '0 4px 10px rgba(0,0,0,0.4)',
+                        'btn-pressed': '0 1px 3px rgba(0,0,0,0.3)',
+                        'modal-depth': '0 12px 30px rgba(0,0,0,0.6)'
+                    },
+                    transitionProperty: {
+                        'physical': 'transform, background-color, box-shadow, border-color'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- IMPLEMENTATION TRACKING: [STYLESHEET] - [CUSTOM_COMPONENT_RULES] -->
+    <style>
+        /* IMPLEMENTATION TRACKING: [STYLESHEET] - [BASE_RESET] */
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; padding: 0; display: flex; flex-direction: column;
+            height: 100vh; width: 100vw; overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: theme('colors.corporate.background');
+        }
+
+        /* IMPLEMENTATION TRACKING: [STYLESHEET] - [PROGRESS_BAR_COMPONENT] */
+        #progress-wrapper {
+            width: 100%; height: 3px; position: absolute; top: 0; left: 0; z-index: 9999;
+            background-color: transparent; pointer-events: none;
+        }
+        #progress-indicator {
+            height: 100%; width: 0%; background-color: theme('colors.corporate.primary');
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            box-shadow: 0 0 12px theme('colors.corporate.primary');
+            opacity: 0;
+        }
+
+        /* IMPLEMENTATION TRACKING: [STYLESHEET] - [TOOLBAR_LAYOUT] */
+        .chrome-toolbar {
+            display: flex; align-items: center; justify-content: flex-start;
+            background-color: theme('colors.corporate.panel');
+            padding: 6px 12px; gap: 8px;
+            border-bottom: 1px solid theme('colors.corporate.border');
+            position: relative; z-index: 1000;
+        }
+
+        /* IMPLEMENTATION TRACKING: [STYLESHEET] - [NAV_BUTTONS] */
+        .icon-action-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 34px; height: 34px; border-radius: 6px;
+            color: theme('colors.corporate.textCore'); background: transparent;
+            border: none; cursor: pointer;
+            transition: theme('transitionProperty.physical') 0.15s ease-in-out;
+            user-select: none;
+        }
+        .icon-action-btn:hover:not(:disabled) {
+            background-color: theme('colors.corporate.iconHover');
+            color: #ffffff;
+        }
+        .icon-action-btn:active:not(:disabled) {
+            background-color: theme('colors.corporate.iconActive');
+            transform: scale(0.92);
+        }
+        .icon-action-btn:disabled {
+            opacity: 0.3; cursor: not-allowed;
+        }
+
+        /* IMPLEMENTATION TRACKING: [STYLESHEET] - [ADDRESS_BAR_CONTAINER] */
+        .address-bar-container {
+            flex: 1 1 auto; display: flex; position: relative; margin: 0 4px;
+        }
+        .address-input-field {
+            width: 100%; padding: 8px 16px; font-size: 13px; font-weight: 400; letter-spacing: 0.2px;
+            background-color: theme('colors.corporate.input'); color: #ffffff;
+            border: 1px solid theme('colors.corporate.border'); border-radius: 24px;
+            outline: none; transition: theme('transitionProperty.physical') 0.2s ease;
+        }
+        .address-input-field:focus {
+            background-color: theme('colors.corporate.inputFocus');
+            border-color: theme('colors.corporate.primary');
+            box-shadow: theme('boxShadow.input-glow');
+        }
+
+        /* IMPLEMENTATION TRACKING: [STYLESHEET] - [PRIMARY_ACTION_BUTTON] */
+        .primary-load-btn {
+            padding: 8px 24px; font-size: 13px; font-weight: 600; white-space: nowrap;
+            background-color: theme('colors.corporate.primary'); color: #ffffff;
+            border: none; border-radius: 24px; cursor: pointer;
+            transition: theme('transitionProperty.physical') 0.15s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .primary-load-btn:hover {
+            background-color: theme('colors.corporate.primaryHover');
+            box-shadow: theme('boxShadow.btn-elevation');
+        }
+        .primary-load-btn:active {
+            background-color: theme('colors.corporate.primaryActive');
+            box-shadow: theme('boxShadow.btn-pressed');
+            transform: scale(0.95);
+        }
+
+        /* IMPLEMENTATION TRACKING: [STYLESHEET] - [BOOKMARK_MODAL_PANEL] */
+        .bookmark-overlay-modal {
+            position: absolute; top: 56px; right: 24px; width: 340px;
+            background-color: theme('colors.corporate.panel');
+            border: 1px solid theme('colors.corporate.border');
+            border-radius: 8px; box-shadow: theme('boxShadow.modal-depth');
+            z-index: 2000; display: none; flex-direction: column; padding: 0;
+            overflow: hidden;
+        }
+        .bookmark-overlay-modal.is-open { display: flex; }
+        .bookmark-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 16px; background-color: theme('colors.corporate.background');
+            border-bottom: 1px solid theme('colors.corporate.border');
+        }
+        .bookmark-header-title { font-size: 14px; font-weight: 600; color: #ffffff; }
+        .bookmark-add-btn {
+            background-color: theme('colors.corporate.primary'); color: #ffffff;
+            border: none; border-radius: 4px; padding: 4px 10px; font-size: 12px; font-weight: 500;
+            cursor: pointer; transition: background-color 0.2s ease;
+        }
+        .bookmark-add-btn:hover { background-color: theme('colors.corporate.primaryHover'); }
+        .bookmark-grid {
+            display: flex; flex-direction: column; max-height: 300px; overflow-y: auto; padding: 8px;
+        }
+        .bookmark-entry {
+            display: flex; flex-direction: column; padding: 10px 12px; border-radius: 6px;
+            cursor: pointer; transition: background-color 0.15s ease;
+        }
+        .bookmark-entry:hover { background-color: theme('colors.corporate.iconHover'); }
+        .bookmark-entry-title { font-size: 13px; font-weight: 600; color: theme('colors.corporate.textCore'); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bookmark-entry-url { font-size: 11px; font-weight: 400; color: theme('colors.corporate.textMuted'); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* IMPLEMENTATION TRACKING: [STYLESHEET] - [IFRAME_WORKSPACE] */
+        .workspace-container {
+            flex: 1 1 auto; position: relative; background-color: #ffffff; width: 100%; height: 100%;
+        }
+        .workspace-frame {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- IMPLEMENTATION TRACKING: [DOM_LAYOUT] - [PROGRESS_BAR_NODE] -->
+    <div id="progress-wrapper">
+        <div id="progress-indicator"></div>
+    </div>
+
+    <!-- IMPLEMENTATION TRACKING: [DOM_LAYOUT] - [CHROME_TOOLBAR_NODE] -->
+    <header class="chrome-toolbar">
+        
+        <!-- IMPLEMENTATION TRACKING: [DOM_LAYOUT] - [NAVIGATION_BACK] -->
+        <button id="action-back" class="icon-action-btn" title="Navigate Back in History" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        
+        <!-- IMPLEMENTATION TRACKING: [DOM_LAYOUT] - [NAVIGATION_FORWARD] -->
+        <button id="action-forward" class="icon-action-btn" title="Navigate Forward in History" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        
+        <!-- IMPLEMENTATION TRACKING: [DOM_LAYOUT] - [NAVIGATION_RELOAD] -->
+        <button id="action-reload" class="icon-action-btn" title="Hard Reload Frame Context">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 1 0 2.63-6.37L21 8"></path></svg>
+        </button>
+
+        <!-- IMPLEMENTATION TRACKING: [DOM_LAYOUT] - [ADDRESS_BAR_INPUT] -->
+        <div class="address-bar-container" title="Enter a secure URL or search query to proxy.">
+            <input type="text" id="action-address" class="address-input-field" value="https://www.google.com/webhp?igu=1" placeholder="Type a destination URL, search term, or YouTube link..." autocomplete="off" spellcheck="false">
+        </div>
+
+        <!-- IMPLEMENTATION TRACKING: [DOM_LAYOUT] - [NAVIGATION_BOOKMARKS] -->
+        <button id="action-bookmark-toggle" class="icon-action-btn" title="Open Bookmark Manager">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        </button>
+
+        <!-- IMPLEMENTATION TRACKING: [DOM_LAYOUT] - [PRIMARY_SUBMIT_BUTTON] -->
+        <button id="action-submit" class="primary-load-btn" title="Initiate Secure Proxy Route">Search / Open</button>
+
+    </header>
+
+    <!-- IMPLEMENTATION TRACKING: [DOM_LAYOUT] - [BOOKMARK_MODAL_STRUCTURE] -->
+    <div id="modal-bookmarks" class="bookmark-overlay-modal">
+        <div class="bookmark-header">
+            <span class="bookmark-header-title">Saved Locations</span>
+            <button id="action-bookmark-add" class="bookmark-add-btn" title="Save Current URL">Save Active</button>
+        </div>
+        <div id="modal-bookmarks-grid" class="bookmark-grid">
+            <!-- IMPLEMENTATION TRACKING: [DOM_LAYOUT] - [DYNAMIC_BOOKMARK_INJECTION_TARGET] -->
+        </div>
+    </div>
+
+    <!-- IMPLEMENTATION TRACKING: [DOM_LAYOUT] - [IFRAME_WORKSPACE_STRUCTURE] -->
+    <main class="workspace-container">
+        <iframe id="workspace-frame" class="workspace-frame" allow="autoplay; encrypted-media; picture-in-picture; clipboard-write; microphone; camera; display-capture; fullscreen" allowfullscreen></iframe>
+    </main>
+
+    <!-- IMPLEMENTATION TRACKING: [JAVASCRIPT_RUNTIME] - [FRONTEND_ENGINE_INITIALIZATION] -->
+    <script>
+        // IMPLEMENTATION TRACKING: [JAVASCRIPT_RUNTIME] - [CLASS_DEFINITION_FRONTEND_CONTROLLER]
+        class EnterpriseFrontendController {
+            constructor() {
+                // IMPLEMENTATION TRACKING: [DOM_BINDINGS] - [ELEMENT_QUERIES]
+                this.dom = {
+                    btnBack: document.getElementById('action-back'),
+                    btnForward: document.getElementById('action-forward'),
+                    btnReload: document.getElementById('action-reload'),
+                    btnBookmarkToggle: document.getElementById('action-bookmark-toggle'),
+                    btnSubmit: document.getElementById('action-submit'),
+                    inputAddress: document.getElementById('action-address'),
+                    iframeWorkspace: document.getElementById('workspace-frame'),
+                    progressIndicator: document.getElementById('progress-indicator'),
+                    modalBookmarks: document.getElementById('modal-bookmarks'),
+                    btnBookmarkAdd: document.getElementById('action-bookmark-add'),
+                    gridBookmarks: document.getElementById('modal-bookmarks-grid')
+                };
+
+                // IMPLEMENTATION TRACKING: [STATE_MANAGEMENT] - [RUNTIME_VARIABLES]
+                this.vscodeTelemetry = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : null;
+                this.activeProxyPort = {{PROXY_PORT}};
+                this.proxyRoutePrefix = '/__tbrowser_core_stream__/?url=';
+                
+                this.navigationHistory = ['https://www.google.com/webhp?igu=1'];
+                this.navigationPointer = 0;
+                
+                this.savedBookmarks = [
+                    { title: 'Google Search', url: 'https://www.google.com/webhp?igu=1' },
+                    { title: 'YouTube Platform', url: 'https://www.youtube.com' },
+                    { title: 'GitHub Repository', url: 'https://github.com' },
+                    { title: 'StackOverflow', url: 'https://stackoverflow.com' }
+                ];
+
+                this.progressTimeoutA = null;
+                this.progressTimeoutB = null;
+                this.progressTimeoutC = null;
+
+                // IMPLEMENTATION TRACKING: [LIFECYCLE] - [BOOTSTRAP_INVOCATION]
+                this.bootstrapEnvironment();
+            }
+
+            // IMPLEMENTATION TRACKING: [LIFECYCLE] - [BOOTSTRAP_IMPLEMENTATION]
+            bootstrapEnvironment() {
+                this.orchestrateEventBindings();
+                this.renderBookmarkGrid();
+                this.synchronizeNavigationState();
+                this.executePipelineRouting(this.navigationHistory[0], false);
+            }
+
+            // IMPLEMENTATION TRACKING: [EVENT_ORCHESTRATION] - [BINDING_REGISTRY]
+            orchestrateEventBindings() {
+                // IMPLEMENTATION TRACKING: [EVENT_ORCHESTRATION] - [SUBMIT_CLICK_HANDLER]
+                this.dom.btnSubmit.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    this.validateAndRouteInput();
+                });
+
+                // IMPLEMENTATION TRACKING: [EVENT_ORCHESTRATION] - [INPUT_KEYDOWN_HANDLER]
+                this.dom.inputAddress.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        this.validateAndRouteInput();
+                        this.dom.inputAddress.blur();
+                    }
+                });
+
+                // IMPLEMENTATION TRACKING: [EVENT_ORCHESTRATION] - [BACK_NAVIGATION_HANDLER]
+                this.dom.btnBack.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    if (this.navigationPointer > 0) {
+                        this.navigationPointer--;
+                        this.executePipelineRouting(this.navigationHistory[this.navigationPointer], false);
+                    }
+                });
+
+                // IMPLEMENTATION TRACKING: [EVENT_ORCHESTRATION] - [FORWARD_NAVIGATION_HANDLER]
+                this.dom.btnForward.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    if (this.navigationPointer < this.navigationHistory.length - 1) {
+                        this.navigationPointer++;
+                        this.executePipelineRouting(this.navigationHistory[this.navigationPointer], false);
+                    }
+                });
+
+                // IMPLEMENTATION TRACKING: [EVENT_ORCHESTRATION] - [HARD_RELOAD_HANDLER]
+                this.dom.btnReload.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    this.initiateProgressSimulation();
+                    const activeSource = this.dom.iframeWorkspace.src;
+                    this.dom.iframeWorkspace.src = 'about:blank';
+                    setTimeout(() => {
+                        this.dom.iframeWorkspace.src = activeSource;
+                    }, 50);
+                });
+
+                // IMPLEMENTATION TRACKING: [EVENT_ORCHESTRATION] - [BOOKMARK_MODAL_TOGGLE]
+                this.dom.btnBookmarkToggle.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    const isCurrentlyOpen = this.dom.modalBookmarks.classList.contains('is-open');
+                    if (isCurrentlyOpen) {
+                        this.dom.modalBookmarks.classList.remove('is-open');
+                    } else {
+                        this.dom.modalBookmarks.classList.add('is-open');
+                    }
+                });
+
+                // IMPLEMENTATION TRACKING: [EVENT_ORCHESTRATION] - [GLOBAL_CLICK_LISTENER_FOR_MODAL]
+                document.addEventListener('click', (event) => {
+                    if (!this.dom.modalBookmarks.contains(event.target) && event.target !== this.dom.btnBookmarkToggle) {
+                        this.dom.modalBookmarks.classList.remove('is-open');
+                    }
+                });
+
+                // IMPLEMENTATION TRACKING: [EVENT_ORCHESTRATION] - [ADD_BOOKMARK_HANDLER]
+                this.dom.btnBookmarkAdd.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    const activeUrl = this.dom.inputAddress.value.trim();
+                    if (!activeUrl) return;
+                    
+                    let hostTitle = 'Saved Link';
+                    try {
+                        hostTitle = new URL(activeUrl).hostname.replace('www.', '');
+                    } catch(err) {
+                        hostTitle = activeUrl.substring(0, 20);
+                    }
+
+                    this.savedBookmarks.push({ title: hostTitle, url: activeUrl });
+                    this.renderBookmarkGrid();
+                    
+                    if (this.vscodeTelemetry) {
+                        this.vscodeTelemetry.postMessage({ command: 'info', text: 'Location saved to Workspace Bookmarks.' });
+                    }
+                });
+
+                // IMPLEMENTATION TRACKING: [EVENT_ORCHESTRATION] - [IFRAME_POSTMESSAGE_INTERCEPTOR]
+                window.addEventListener('message', (event) => {
+                    if (!event.data || typeof event.data !== 'object') return;
+                    
+                    const payload = event.data;
+                    if (payload.instruction === 'tbrowser-runtime-loaded') {
+                        this.terminateProgressSimulation();
+                    } else if (payload.instruction === 'tbrowser-runtime-navigation') {
+                        if (payload.targetUrl && typeof payload.targetUrl === 'string') {
+                            this.dom.inputAddress.value = payload.targetUrl;
+                            this.pushToNavigationStack(payload.targetUrl);
+                        }
+                    }
+                });
+
+                // IMPLEMENTATION TRACKING: [EVENT_ORCHESTRATION] - [IFRAME_NATIVE_LOAD_LISTENER]
+                this.dom.iframeWorkspace.addEventListener('load', () => {
+                    this.terminateProgressSimulation();
+                });
+            }
+
+            // IMPLEMENTATION TRACKING: [STATE_MANAGEMENT] - [BUTTON_STATE_SYNCHRONIZATION]
+            synchronizeNavigationState() {
+                if (this.navigationPointer <= 0) {
+                    this.dom.btnBack.setAttribute('disabled', 'true');
+                } else {
+                    this.dom.btnBack.removeAttribute('disabled');
+                }
+
+                if (this.navigationPointer >= this.navigationHistory.length - 1) {
+                    this.dom.btnForward.setAttribute('disabled', 'true');
+                } else {
+                    this.dom.btnForward.removeAttribute('disabled');
+                }
+            }
+
+            // IMPLEMENTATION TRACKING: [STATE_MANAGEMENT] - [HISTORY_STACK_MUTATION]
+            pushToNavigationStack(newUrl) {
+                if (this.navigationHistory[this.navigationPointer] !== newUrl) {
+                    this.navigationHistory = this.navigationHistory.slice(0, this.navigationPointer + 1);
+                    this.navigationHistory.push(newUrl);
+                    this.navigationPointer++;
+                    this.synchronizeNavigationState();
+                }
+            }
+
+            // IMPLEMENTATION TRACKING: [VISUAL_FEEDBACK] - [PROGRESS_SIMULATION_START]
+            initiateProgressSimulation() {
+                clearTimeout(this.progressTimeoutA);
+                clearTimeout(this.progressTimeoutB);
+                clearTimeout(this.progressTimeoutC);
+
+                this.dom.progressIndicator.style.opacity = '1';
+                this.dom.progressIndicator.style.width = '15%';
+
+                this.progressTimeoutA = setTimeout(() => {
+                    this.dom.progressIndicator.style.width = '45%';
+                }, 300);
+
+                this.progressTimeoutB = setTimeout(() => {
+                    this.dom.progressIndicator.style.width = '75%';
+                }, 800);
+
+                this.progressTimeoutC = setTimeout(() => {
+                    this.terminateProgressSimulation();
+                }, 5000);
+            }
+            
+            // IMPLEMENTATION TRACKING: [VISUAL_FEEDBACK] - [PROGRESS_SIMULATION_END]
+            terminateProgressSimulation() {
+                clearTimeout(this.progressTimeoutA);
+                clearTimeout(this.progressTimeoutB);
+                clearTimeout(this.progressTimeoutC);
+
+                this.dom.progressIndicator.style.width = '100%';
+                
+                setTimeout(() => { 
+                    this.dom.progressIndicator.style.opacity = '0'; 
+                    setTimeout(() => { 
+                        this.dom.progressIndicator.style.width = '0%'; 
+                    }, 400);
+                }, 400);
+            }
+
+            // IMPLEMENTATION TRACKING: [DOM_MUTATION] - [BOOKMARK_GRID_RENDERING]
+            renderBookmarkGrid() {
+                this.dom.gridBookmarks.innerHTML = '';
+                
+                for (let i = 0; i < this.savedBookmarks.length; i++) {
+                    const bookmarkContext = this.savedBookmarks[i];
+                    
+                    const entryNode = document.createElement('div');
+                    entryNode.className = 'bookmark-entry';
+                    entryNode.title = bookmarkContext.url;
+                    
+                    const titleNode = document.createElement('span');
+                    titleNode.className = 'bookmark-entry-title';
+                    titleNode.textContent = bookmarkContext.title;
+                    
+                    const urlNode = document.createElement('span');
+                    urlNode.className = 'bookmark-entry-url';
+                    urlNode.textContent = bookmarkContext.url;
+                    
+                    entryNode.appendChild(titleNode);
+                    entryNode.appendChild(urlNode);
+                    
+                    entryNode.addEventListener('click', () => {
+                        this.dom.inputAddress.value = bookmarkContext.url;
+                        this.dom.modalBookmarks.classList.remove('is-open');
+                        this.validateAndRouteInput();
+                    });
+                    
+                    this.dom.gridBookmarks.appendChild(entryNode);
+                }
+            }
+
+            // IMPLEMENTATION TRACKING: [ROUTING_PIPELINE] - [INPUT_VALIDATION_PHASE]
+            validateAndRouteInput() {
+                const rawInputValue = this.dom.inputAddress.value.trim();
+                if (rawInputValue === '') return;
+
+                let fullyResolvedUrl = rawInputValue;
+
+                // IMPLEMENTATION TRACKING: [ROUTING_PIPELINE] - [MEDIA_EMBED_AUTOMATION]
+                if (rawInputValue.indexOf('youtube.com/watch?v=') !== -1) {
+                    const extractedQuery = rawInputValue.split('?')[1];
+                    if (extractedQuery) {
+                        const urlParameters = new URLSearchParams(extractedQuery);
+                        const videoIdentifier = urlParameters.get('v');
+                        if (videoIdentifier) {
+                            fullyResolvedUrl = 'https://www.youtube.com/embed/' + videoIdentifier + '?autoplay=1&mute=0';
+                        }
+                    }
+                } else if (rawInputValue.indexOf('youtu.be/') !== -1) {
+                    const pathSplit = rawInputValue.split('youtu.be/')[1];
+                    if (pathSplit) {
+                        const videoIdentifier = pathSplit.split('?')[0];
+                        if (videoIdentifier) {
+                            fullyResolvedUrl = 'https://www.youtube.com/embed/' + videoIdentifier + '?autoplay=1&mute=0';
+                        }
+                    }
+                } 
+                // IMPLEMENTATION TRACKING: [ROUTING_PIPELINE] - [PROTOCOL_INJECTION_AND_SEARCH]
+                else if (!/^https?:\/\//i.test(rawInputValue)) {
+                    if (rawInputValue.indexOf('.') !== -1 && rawInputValue.indexOf(' ') === -1) {
+                        fullyResolvedUrl = 'https://' + rawInputValue;
+                    } else {
+                        fullyResolvedUrl = 'https://www.google.com/search?q=' + encodeURIComponent(rawInputValue);
+                    }
+                }
+
+                this.dom.inputAddress.value = fullyResolvedUrl;
+                this.executePipelineRouting(fullyResolvedUrl, true);
+            }
+
+            // IMPLEMENTATION TRACKING: [ROUTING_PIPELINE] - [PROXY_EXECUTION_PHASE]
+            executePipelineRouting(targetDestinationUrl, shouldPushToHistory) {
+                this.initiateProgressSimulation();
+                
+                if (shouldPushToHistory) {
+                    this.pushToNavigationStack(targetDestinationUrl);
+                }
+
+                const encodedTarget = encodeURIComponent(targetDestinationUrl);
+                const absoluteProxyBridgeUrl = 'http://127.0.0.1:' + this.activeProxyPort + this.proxyRoutePrefix + encodedTarget;
+                
+                this.dom.iframeWorkspace.src = absoluteProxyBridgeUrl;
+            }
+        }
+
+        // IMPLEMENTATION TRACKING: [SYSTEM_BOOT] - [DOM_CONTENT_LOADED_LISTENER]
+        document.addEventListener('DOMContentLoaded', () => {
+            window.tBrowserApplicationEnvironment = new EnterpriseFrontendController();
+        });
+    </script>
+</body>
+</html>

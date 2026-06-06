@@ -1,0 +1,32 @@
+{
+  "name": "t-browser",
+  "displayName": "T Browser For VS Code",
+  "description": "Enterprise-grade secure browser virtualization with stateful proxy network",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "t-browser.open",
+        "title": "T Browser: Open Browser"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.130",
+    "@types/vscode": "^1.120.0",
+    "typescript": "^5.x.x"
+  }
+}
