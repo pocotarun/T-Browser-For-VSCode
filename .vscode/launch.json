@@ -1,0 +1,22 @@
+// This JSON snippet is a configuration for launching a browser extension in a development environment.
+// It specifies the version, configurations, and settings for launching the extension. The
+// configuration includes details such as the name of the configuration ("Launch T Browser"), the type
+// of configuration ("extensionHost"), the request type ("launch"), the executable path for the
+// runtime, arguments to be passed, and the output files to be generated.
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch T Browser",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/dist/**/*.js"
+      ]
+    }
+  ]
+}

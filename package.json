@@ -28,5 +28,8 @@
     "@types/node": "^18.19.130",
     "@types/vscode": "^1.120.0",
     "typescript": "^5.x.x"
+  },
+  "dependencies": {
+    "punycode": "^2.3.1"
   }
 }
